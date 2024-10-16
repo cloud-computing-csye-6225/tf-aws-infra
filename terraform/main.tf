@@ -1,4 +1,4 @@
-provider "aws" {
+provider "as" {
   profile = var.aws_profile
   region  = var.region
 }
