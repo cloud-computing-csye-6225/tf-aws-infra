@@ -62,6 +62,11 @@ variable "db_name" {
   type        = string
   default     = "csye6225"
 }
+variable "db_port" {
+  description = "Database port number"
+  type        = number
+  default     = 3306
+}
 variable "db_identifier" {
   description = "Name of the DB engine"
   type        = string

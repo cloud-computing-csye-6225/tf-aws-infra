@@ -134,6 +134,7 @@ resource "aws_security_group" "database_sg" {
   tags = merge(var.tags, { Name = "database-security-group-${var.unique_suffix}" })
 }
 
+
 resource "aws_instance" "app_instance" {
   count                       = length(var.public_subnet_cidrs)
   ami                         = var.custom_ami
@@ -141,7 +142,6 @@ resource "aws_instance" "app_instance" {
   subnet_id                   = aws_subnet.public[count.index].id
   vpc_security_group_ids      = [aws_security_group.application_sg.id]
   associate_public_ip_address = true
-  key_name                    = var.key_pair_name
 
   root_block_device {
     volume_size           = 25
@@ -149,27 +149,38 @@ resource "aws_instance" "app_instance" {
     delete_on_termination = true
   }
 
-  lifecycle {
-    prevent_destroy = false # No accidental termination protection
-  }
   user_data = <<-EOF
     #!/bin/bash
-    echo "DB_USERNAME=${var.db_username}" >> /etc/environment
-    echo "DB_PASSWORD=${var.db_password}" >> /etc/environment
-    echo "DB_HOSTNAME=${aws_db_instance.rds_instance.address}" >> /etc/environment
+    echo "# App Environment Variables" | sudo tee -a /etc/environment
+    echo "SPRING_DATASOURCE_URL=jdbc:mysql://${aws_db_instance.rds_instance.address}:${var.db_port}/${var.db_name}" | sudo tee -a /etc/environment
+    echo "SPRING_DATASOURCE_USERNAME=${var.db_username}" | sudo tee -a /etc/environment
+    echo "SPRING_DATASOURCE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
+    source /etc/environment
   EOF
 
   tags = merge(var.tags, { Name = "web-app-instance-${var.unique_suffix}" })
 }
 
 resource "aws_db_parameter_group" "mydb_parameter_group" {
-  name   = "rds-webapp-db-parameter-group"
-  family = var.db_family
+  name        = "rds-webapp-db-parameter-group"
+  family      = var.db_family
+  description = "parameters for the webapp database"
 
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8mb4"
+  }
+
+  parameter {
+    name  = "collation_server"
+    value = "utf8mb4_unicode_ci"
+  }
   parameter {
     name  = "max_connections"
     value = "100"
   }
+
 
   tags = merge(var.tags, { Name = "mydb-parameter-group-${var.unique_suffix}" })
 }
@@ -186,20 +197,21 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 
 
 resource "aws_db_instance" "rds_instance" {
-  allocated_storage      = 10
   instance_class         = var.db_instance_class
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
+  allocated_storage      = 10
+  port                   = var.db_port
   identifier             = var.db_identifier
+  db_name                = var.db_name
   username               = var.db_username
   password               = var.db_password
+  vpc_security_group_ids = [aws_security_group.database_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
   parameter_group_name   = aws_db_parameter_group.mydb_parameter_group.name
-  vpc_security_group_ids = [aws_security_group.database_sg.id]
   multi_az               = false
   publicly_accessible    = false
   skip_final_snapshot    = true
-  db_name                = var.db_name
 
   tags = merge(var.tags, { Name = "rds-instance-${var.unique_suffix}" })
 }
