@@ -51,7 +51,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = length(var.public_subnet_cidrs)
+  count          = length(var.public_subnet_cidrs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
@@ -112,15 +112,15 @@ resource "aws_security_group" "application_sg" {
 }
 
 resource "aws_security_group" "database_sg" {
-  name = "database_sg"
+  name        = "database_sg"
   description = "Database security group for RDS instance"
-  vpc_id = aws_vpc.main.id
+  vpc_id      = aws_vpc.main.id
 
 
   ingress {
-    from_port = 3306
-    to_port = 3306
-    protocol = "tcp"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
     security_groups = [aws_security_group.application_sg.id]
   }
 
@@ -186,20 +186,20 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 
 
 resource "aws_db_instance" "rds_instance" {
-  allocated_storage    = 10
-  instance_class       = var.db_instance_class
-  engine               = var.db_engine
-  engine_version       = var.db_engine_version
-  identifier           = var.db_identifier
-  username             = var.db_username
-  password             = var.db_password
-  db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
-  parameter_group_name = aws_db_parameter_group.mydb_parameter_group.name
+  allocated_storage      = 10
+  instance_class         = var.db_instance_class
+  engine                 = var.db_engine
+  engine_version         = var.db_engine_version
+  identifier             = var.db_identifier
+  username               = var.db_username
+  password               = var.db_password
+  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
+  parameter_group_name   = aws_db_parameter_group.mydb_parameter_group.name
   vpc_security_group_ids = [aws_security_group.database_sg.id]
-  multi_az             = false
-  publicly_accessible  = false
-  skip_final_snapshot  = true
-  db_name              = var.db_name
+  multi_az               = false
+  publicly_accessible    = false
+  skip_final_snapshot    = true
+  db_name                = var.db_name
 
   tags = merge(var.tags, { Name = "rds-instance-${var.unique_suffix}" })
 }

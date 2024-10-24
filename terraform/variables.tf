@@ -63,7 +63,7 @@ variable "db_name" {
   default     = "csye6225"
 }
 variable "db_identifier" {
-  description = "Name of the database engine"
+  description = "Name of the DB engine"
   type        = string
   default     = "csye6225"
 }
