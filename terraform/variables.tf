@@ -26,12 +26,17 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidr" {
+variable "public_subnet_cidrs" {
   description = "CIDR blocks for the public subnets"
-  type        = string
-  default     = "10.0.1.0/24"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
 
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for the private subnets"
+  type        = list(string)
+  default     = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
+}
 
 
 variable "application_port" {
@@ -43,9 +48,62 @@ variable "application_port" {
 variable "custom_ami" {
   description = "The ID of the custom AMI"
   type        = string
+  default     = "ami-0866a3c8686eaeeba"
 }
 
 variable "key_pair_name" {
   description = "Name of the SSH key pair to use"
   type        = string
+  default     = "ec2-local"
 }
+
+variable "db_name" {
+  description = "Name of the database engine"
+  type        = string
+  default     = "csye6225"
+}
+variable "db_identifier" {
+  description = "Name of the DB engine"
+  type        = string
+  default     = "csye6225"
+}
+variable "db_family" {
+  description = "Name of the database engine"
+  type        = string
+  default     = "mysql"
+}
+variable "db_engine" {
+  description = "Name of the database engine"
+  type        = string
+  default     = "mysql"
+}
+variable "db_engine_version" {
+  description = "Name of the database engine"
+  type        = string
+  default     = "8.0.39"
+}
+variable "db_instance_class" {
+  description = "DB instance class"
+  type        = string
+  default     = "db.t3.micro"
+}
+variable "db_username" {
+  description = "DB instance class"
+  type        = string
+  default     = "csye6225"
+}
+variable "db_password" {
+  description = "DB instance class"
+  type        = string
+  default     = "passowrd"
+}
+
+variable "tags" {
+  description = "Tags to associate with resources"
+  type        = map(string)
+  default = {
+    Environment = "dev"
+    Project     = "AWS Infra Setup"
+  }
+}
+
