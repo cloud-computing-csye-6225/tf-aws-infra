@@ -1,7 +1,7 @@
 variable "aws_profile" {
   description = "The AWS CLI profile to use"
   type        = string
-  default     = "demo"
+  default     = "dev"
 }
 
 variable "region" {
@@ -18,7 +18,7 @@ variable "vpc_name" {
 variable "unique_suffix" {
   description = "Unique suffix to ensure resource names are unique"
   type        = string
-  default     = "001"
+  default     = "003"
 }
 
 variable "vpc_cidr" {
@@ -101,6 +101,21 @@ variable "db_password" {
   description = "DB instance class"
   type        = string
   default     = "passowrd"
+}
+variable "domain_name" {
+  description = "Domain name for application"
+  type        = string
+  default     = "www.cloudapplication.com"
+}
+variable "dev_hosted_zone_id" {
+  description = "zone id for dev hosted zone"
+  type        = string
+  default     = "Z04660987GS3LZNKC1VJ"
+}
+variable "demo_hosted_zone_id" {
+  description = "zone id for demo hosted zone"
+  type        = string
+  default     = "Z02287832YEL0AQ8CM5PY"
 }
 
 variable "tags" {
