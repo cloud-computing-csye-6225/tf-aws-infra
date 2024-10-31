@@ -135,11 +135,15 @@ resource "aws_security_group" "database_sg" {
 }
 
 
+resource "random_integer" "random_index" {
+  min = 0
+  max = length(var.public_subnet_cidrs) - 1
+}
+
 resource "aws_instance" "app_instance" {
-  count                       = length(var.public_subnet_cidrs)
   ami                         = var.custom_ami
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.public[count.index].id
+  subnet_id                   = element(aws_subnet.public[*].id, random_integer.random_index.result)
   vpc_security_group_ids      = [aws_security_group.application_sg.id]
   associate_public_ip_address = true
 
@@ -155,6 +159,7 @@ resource "aws_instance" "app_instance" {
     echo "SPRING_DATASOURCE_URL=jdbc:mysql://${aws_db_instance.rds_instance.address}:${var.db_port}/${var.db_name}" | sudo tee -a /etc/environment
     echo "SPRING_DATASOURCE_USERNAME=${var.db_username}" | sudo tee -a /etc/environment
     echo "SPRING_DATASOURCE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
+    echo "S3_BUCKET=${aws_s3_bucket.log_bucket.bucket}" | sudo tee -a /etc/environment
     source /etc/environment
   EOF
 
