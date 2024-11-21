@@ -127,3 +127,15 @@ variable "tags" {
   }
 }
 
+variable "sendgrid_api_key" {
+  description = "API key for SendGrid email service"
+  sensitive   = true
+}
+
+variable "email_from_address" {
+  description = "Sender email address for the application"
+}
+variable "lambda_file_path" {
+  description = "Email address to subscribe to SNS topic"
+  type        = string
+}
