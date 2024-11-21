@@ -18,7 +18,8 @@ resource "aws_launch_template" "asg_launch_template" {
     echo "SPRING_DATASOURCE_USERNAME=${var.db_username}" | sudo tee -a /etc/environment
     echo "SPRING_DATASOURCE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
     echo "S3_BUCKET=${aws_s3_bucket.log_bucket.bucket}" | sudo tee -a /etc/environment
-    source /etc/environment
+    echo "app.base-url=http://${var.aws_profile}.${var.domain_name}" | sudo tee -a /etc/environment
+    echo "SNS_TOPIC_ARN=${aws_sns_topic.email_topic.arn}"  | sudo tee -a /etc/environment
   EOF
   )
 }
@@ -26,9 +27,9 @@ resource "aws_launch_template" "asg_launch_template" {
 
 resource "aws_autoscaling_group" "autoscaling" {
   name             = "autoscaling-group-${var.unique_suffix}"
-  min_size         = 3
+  min_size         = 1
   max_size         = 5
-  desired_capacity = 3
+  desired_capacity = 1
   launch_template {
     id      = aws_launch_template.asg_launch_template.id
     version = "$Latest"
