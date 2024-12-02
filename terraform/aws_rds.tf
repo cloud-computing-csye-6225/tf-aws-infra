@@ -1,7 +1,7 @@
 resource "aws_db_parameter_group" "mydb_parameter_group" {
-  name        = "rds-webapp-db-parameter-group-${var.unique_suffix}"
+  name        = "rds-db-param-${var.unique_suffix}"
   family      = var.db_family
-  description = "parameters for the webapp database"
+  description = "Custom parameter group for RDS"
 
   parameter {
     name  = "character_set_server"
@@ -17,15 +17,13 @@ resource "aws_db_parameter_group" "mydb_parameter_group" {
     name  = "max_connections"
     value = "100"
   }
-
-  tags = merge(var.tags, { Name = "mydb-parameter-group-${var.unique_suffix}" })
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "rds-subnet-group-${var.unique_suffix}"
+  name       = "rds-subnet-${var.unique_suffix}"
   subnet_ids = aws_subnet.private[*].id
 
-  tags = merge(var.tags, { Name = "rds-subnet-group-${var.unique_suffix}" })
+  tags = { Name = "rds-subnet-group-${var.unique_suffix}" }
 }
 
 resource "aws_db_instance" "rds_instance" {
@@ -34,16 +32,18 @@ resource "aws_db_instance" "rds_instance" {
   engine_version         = var.db_engine_version
   allocated_storage      = 10
   port                   = var.db_port
-  identifier             = "${var.db_identifier}-${var.unique_suffix}"
+  identifier             = "rds-instance-${var.unique_suffix}"
   db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
+  username               = jsondecode(aws_secretsmanager_secret_version.db_password_version.secret_string)["username"]
+  password               = jsondecode(aws_secretsmanager_secret_version.db_password_version.secret_string)["password"]
   vpc_security_group_ids = [aws_security_group.database_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
   parameter_group_name   = aws_db_parameter_group.mydb_parameter_group.name
   multi_az               = false
   publicly_accessible    = false
   skip_final_snapshot    = true
+  kms_key_id             = aws_kms_key.rds_key.arn
+  storage_encrypted      = true
 
-  tags = merge(var.tags, { Name = "rds-instance-${var.unique_suffix}" })
+  tags = { Name = "rds-instance-${var.unique_suffix}" }
 }
