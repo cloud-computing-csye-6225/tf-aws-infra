@@ -12,16 +12,42 @@ resource "aws_launch_template" "asg_launch_template" {
   vpc_security_group_ids = [aws_security_group.application_sg.id]
   key_name               = var.key_pair_name
   user_data = base64encode(<<-EOF
-    #!/bin/bash
-    echo "# App Environment Variables" | sudo tee -a /etc/environment
-    echo "SPRING_DATASOURCE_URL=jdbc:mysql://${aws_db_instance.rds_instance.address}:${var.db_port}/${var.db_name}" | sudo tee -a /etc/environment
-    echo "SPRING_DATASOURCE_USERNAME=${var.db_username}" | sudo tee -a /etc/environment
-    echo "SPRING_DATASOURCE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
+  #!/bin/bash
+
+    sudo apt update -y
+    sudo apt install -y unzip jq
+
+    # Download and install AWS CLI v2
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+    rm -rf awscliv2.zip aws/
+
+    # Fetch Database Credentials from Secrets Manager
+    DB_SECRET=$(aws secretsmanager get-secret-value --secret-id db-password-dev --query 'SecretString' --output text)
+    DB_USERNAME=$(echo $DB_SECRET | jq -r '.username')
+    DB_PASSWORD=$(echo $DB_SECRET | jq -r '.password')
+
+    # Fetch Email Service Credentials from Secrets Manager
+    EMAIL_SECRET=$(aws secretsmanager get-secret-value --secret-id email-credentials-dev --query 'SecretString' --output text)
+    EMAIL_API_KEY=$(echo $EMAIL_SECRET | jq -r '.api_key')
+    EMAIL_FROM=$(echo $EMAIL_SECRET | jq -r '.from')
+
+    # Set Environment Variables
+    echo "spring.datasource.url=jdbc:mysql://${aws_db_instance.rds_instance.address}:${var.db_port}/${var.db_name}" | sudo tee -a /etc/environment
+    echo "spring.datasource.username=$DB_USERNAME" | sudo tee -a /etc/environment
+    echo "spring.datasource.password=$DB_PASSWORD" | sudo tee -a /etc/environment
+    echo "amazonProperties.clientRegion=us-east-1" | sudo tee -a /etc/environment
+    echo "sendgrid.api-key=$EMAIL_API_KEY" | sudo tee -a /etc/environment
+    echo "EMAIL_FROM=$EMAIL_FROM" | sudo tee -a /etc/environment
     echo "S3_BUCKET=${aws_s3_bucket.log_bucket.bucket}" | sudo tee -a /etc/environment
-    echo "app.base-url=http://${var.aws_profile}.${var.domain_name}" | sudo tee -a /etc/environment
-    echo "SNS_TOPIC_ARN=${aws_sns_topic.email_topic.arn}"  | sudo tee -a /etc/environment
-  EOF
+    echo "SNS_TOPIC_ARN=${aws_sns_topic.email_topic.arn}" | sudo tee -a /etc/environment
+
+    # Reload Environment Variables
+    source /etc/environment
+EOF
   )
+
 }
 
 

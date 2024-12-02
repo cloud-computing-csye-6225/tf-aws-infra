@@ -105,7 +105,12 @@ variable "db_password" {
 variable "domain_name" {
   description = "Domain name for application"
   type        = string
-  default     = "www.cloudapplication.com"
+  default     = "www.cloudwebapplication.com"
+}
+variable "subdomain_name" {
+  description = "Domain name for application"
+  type        = string
+  default     = "dev.cloudwebapplication.com"
 }
 variable "dev_hosted_zone_id" {
   description = "zone id for dev hosted zone"
@@ -131,8 +136,12 @@ variable "sendgrid_api_key" {
   description = "API key for SendGrid email service"
   sensitive   = true
 }
+variable "email_api_key" {
+  description = "API key for SendGrid email service"
+  sensitive   = true
+}
 
-variable "email_from_address" {
+variable "email_from" {
   description = "Sender email address for the application"
 }
 variable "lambda_file_path" {

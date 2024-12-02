@@ -12,7 +12,7 @@ resource "aws_lambda_function" "email_lambda" {
       DB_USERNAME   = var.db_username
       DB_PASSWORD   = var.db_password
       EMAIL_API_KEY = var.sendgrid_api_key
-      EMAIL_FROM    = var.email_from_address
+      EMAIL_FROM    = var.email_from
       SNS_TOPIC_ARN = aws_sns_topic.email_topic.arn
     }
   }
