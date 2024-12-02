@@ -8,3 +8,15 @@ resource "aws_route53_record" "subdomain" {
     evaluate_target_health = true
   }
 }
+
+# Add DNS Validation Records
+resource "aws_route53_record" "acm_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.dev_ssl_cert.domain_validation_options : dvo.domain_name => dvo
+  }
+  zone_id = var.aws_profile == "dev" ? var.dev_hosted_zone_id : var.demo_hosted_zone_id
+  name    = each.value.resource_record_name
+  type    = each.value.resource_record_type
+  records = [each.value.resource_record_value]
+  ttl     = 300
+}
